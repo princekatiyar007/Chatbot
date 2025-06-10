@@ -1,0 +1,169 @@
+document.addEventListener('DOMContentLoaded', async () => {
+    const app = document.getElementById('app');
+
+    try {
+        const response = await fetch('./data.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        data.forEach((block, index) => {
+            let elementWrapper = document.createElement('div'); // Wrapper for consistent styling and animation
+            elementWrapper.className = `section-card animated-element animate-slide-up animation-delay-${index * 100}`; // Apply card style and animation
+
+            let element;
+            switch (block.type) {
+                case 'heading':
+                    element = document.createElement('h1');
+                    element.className = 'text-4xl md:text-5xl font-bold text-primary-light mb-6 text-center tracking-tight';
+                    element.textContent = block.content;
+                    elementWrapper.classList.add('py-4'); // Extra padding for headings
+                    break;
+                case 'subheading':
+                    element = document.createElement('h2');
+                    element.className = 'text-3xl md:text-4xl font-semibold text-secondary-dark mb-5 text-center mt-6 tracking-tight';
+                    element.textContent = block.content;
+                    elementWrapper.classList.add('py-3');
+                    break;
+                case 'paragraph':
+                    element = document.createElement('p');
+                    element.className = 'text-lg leading-relaxed text-secondary-dark mb-4 px-2 md:px-0 opacity-90'; // Softer text color
+                    element.textContent = block.content;
+                    break;
+                case 'image':
+                    element = document.createElement('div');
+                    element.className = 'flex justify-center my-6 p-2'; // Added padding
+                    const img = document.createElement('img');
+                    img.src = block.src;
+                    img.alt = block.alt;
+                    img.className = 'max-w-full h-auto rounded-lg shadow-smooth object-cover transform hover:scale-102 transition-transform duration-300 ease-in-out'; // Image styling and hover effect
+                    element.appendChild(img);
+                    elementWrapper.classList.remove('section-card'); // Images might not need the full card treatment, or customize if they do
+                    elementWrapper.classList.add('mb-8'); // More space below images
+                    break;
+                case 'list':
+                    element = document.createElement('ul');
+                    element.className = 'list-disc list-inside text-lg text-secondary-dark mb-4 pl-6 md:pl-8 space-y-2'; // Added space between list items
+                    block.items.forEach(itemText => {
+                        const li = document.createElement('li');
+                        li.textContent = itemText;
+                        li.className = 'text-secondary-dark hover:text-primary-light transition-colors duration-200'; // List item styling
+                        element.appendChild(li);
+                    });
+                    break;
+                default:
+                    console.warn(`Unknown block type: ${block.type}`);
+                    return;
+            }
+            elementWrapper.appendChild(element);
+            app.appendChild(elementWrapper);
+
+            // Dynamically set animation delay for staggered appearance
+            elementWrapper.style.animationDelay = `${index * 0.15}s`; // Staggered animation
+        });
+    } catch (error) {
+        console.error('Error fetching or parsing data:', error);
+        app.innerHTML = '<p class="text-red-500 text-center text-xl p-8">Failed to load content. Please try again later.</p>';
+    }
+});
+
+
+
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Merriweather:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Global Styles for Enhanced Aesthetics */
+
+body {
+    background-color: theme('colors.background-light'); /* Using new background color */
+    background-image: linear-gradient(135deg, theme('colors.background-light') 25%, theme('colors.background-dark') 100%);
+    background-attachment: fixed; /* Ensures the gradient stays in place */
+    line-height: 1.75; /* Improved readability for body text */
+    color: theme('colors.secondary-dark'); /* Default text color */
+}
+
+/* Enhancing component appearance with custom classes */
+.section-card {
+    background-color: white;
+    border-radius: 1rem; /* More rounded corners */
+    padding: 2.5rem; /* Increased padding */
+    box-shadow: theme('boxShadow.smooth');
+    margin-bottom: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section-card:hover {
+    transform: translateY(-5px);
+    box-shadow: theme('boxShadow.lg-smooth');
+}
+
+/* Utility to ensure elements are animated */
+.animated-element {
+    opacity: 0; /* Start invisible for animation */
+    animation-fill-mode: forwards; /* Keep the end state of the animation */
+}
+
+/* Scroll behavior for smooth navigation if links are added later */
+html {
+    scroll-behavior: smooth;
+}
+
+
+
+
+
+
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./index.html",
+    "./index.js",
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['"Roboto"', 'sans-serif'], // Changed to Roboto for a cleaner look
+        serif: ['"Merriweather"', 'serif'], // Added a serif font for potential use
+      },
+      colors: {
+        // A more professional and modern palette
+        'primary-dark': '#0056b3', // Darker blue for accents/hover
+        'primary-light': '#007bff', // Main brand blue
+        'secondary-dark': '#495057', // Darker grey for body text
+        'secondary-light': '#6c757d', // Lighter grey for subtle text
+        'background-light': '#f8f9fa', // Very light background
+        'background-dark': '#e9ecef', // Slightly darker background for sections
+        'accent-green': '#28a745', // A vibrant accent green
+        'accent-red': '#dc3545',   // A vibrant accent red
+      },
+      boxShadow: {
+        'smooth': '0 4px 12px rgba(0, 0, 0, 0.08)', // Softer shadow for cards/images
+        'lg-smooth': '0 10px 25px rgba(0, 0, 0, 0.1)', // Larger, smoother shadow
+      },
+      transitionProperty: {
+        'height': 'height',
+      },
+      animation: {
+        'fade-in': 'fadeIn 1s ease-out forwards',
+        'slide-up': 'slideUp 0.8s ease-out forwards',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(20px)', opacity: 0 },
+          '100%': { transform: 'translateY(0)', opacity: 1 },
+        },
+      }
+    },
+  },
+  plugins: [],
+}
