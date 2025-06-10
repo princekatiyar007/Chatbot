@@ -167,3 +167,84 @@ module.exports = {
   },
   plugins: [],
 }
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Website</title>
+    <link href="./style.css" rel="stylesheet">
+</head>
+<body class="font-sans antialiased text-gray-800">
+    <div id="app" class="container mx-auto p-4 md:p-8">
+        </div>
+
+    <script src="./index.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+[
+  {
+    "type": "heading",
+    "content": "Welcome to Our Professional Services"
+  },
+  {
+    "type": "subheading",
+    "content": "Innovating Solutions for a Better Future"
+  },
+  {
+    "type": "paragraph",
+    "content": "At our company, we are dedicated to providing cutting-edge solutions that address your unique challenges. Our team of experts is committed to excellence and driven by innovation."
+  },
+  {
+    "type": "image",
+    "src": "https://via.placeholder.com/800x400/007bff/ffffff?text=Professional+Image+1",
+    "alt": "Professional office setting"
+  },
+  {
+    "type": "paragraph",
+    "content": "We believe in fostering strong relationships with our clients, understanding their needs, and delivering tailored strategies that yield measurable results. Our approach is collaborative and transparent."
+  },
+  {
+    "type": "list",
+    "items": [
+      "Strategic Planning & Consulting",
+      "Software Development & Integration",
+      "Data Analytics & Insights",
+      "Cloud Solutions & Infrastructure",
+      "Digital Marketing & Branding"
+    ]
+  },
+  {
+    "type": "subheading",
+    "content": "Our Core Values"
+  },
+  {
+    "type": "paragraph",
+    "content": "Integrity, innovation, and customer satisfaction are the cornerstones of our operations. We strive to uphold these values in every project we undertake."
+  },
+  {
+    "type": "image",
+    "src": "https://via.placeholder.com/600x300/28a745/ffffff?text=Professional+Image+2",
+    "alt": "Team collaboration"
+  },
+  {
+    "type": "paragraph",
+    "content": "Contact us today to learn how we can help your business thrive in an ever-evolving digital landscape. We look forward to partnering with you."
+  }
+]
