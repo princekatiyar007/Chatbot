@@ -1,73 +1,16 @@
-import React from 'react';
-import './AudioWave.css'; // CSS animation defined separately
 
-const AudioWave = ({ isSpeaking }) => {
-  return (
-    <div className={`wave-container ${isSpeaking ? 'speaking' : ''}`}>
-      <div className="bar bar1" />
-      <div className="bar bar2" />
-      <div className="bar bar3" />
-      <div className="bar bar4" />
-      <div className="bar bar5" />
-    </div>
-  );
-};
-
-export default AudioWave;
-
-
-
-.wave-container {
-  display: flex;
-  justify-content: center;
-  align-items: end;
-  gap: 4px;
-  height: 40px;
-  margin-top: 20px;
-}
-
-.bar {
-  width: 6px;
-  height: 10px;
-  background: #4ade80;
-  border-radius: 4px;
-  animation: none;
-}
-
-.speaking .bar1 { animation: wave 0.6s infinite ease-in-out; }
-.speaking .bar2 { animation: wave 0.6s infinite ease-in-out 0.1s; }
-.speaking .bar3 { animation: wave 0.6s infinite ease-in-out 0.2s; }
-.speaking .bar4 { animation: wave 0.6s infinite ease-in-out 0.3s; }
-.speaking .bar5 { animation: wave 0.6s infinite ease-in-out 0.4s; }
-
-@keyframes wave {
-  0%, 100% {
-    height: 10px;
-  }
-  50% {
-    height: 40px;
-  }
-}
-
-
-
-
-
-
-
-
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
 import InputSection from './components/InputSection';
 import SpeakerDisplay from './components/SpeakerDisplay';
-import AudioWave from './components/AudioWave';
+import AudioVisualizer from './components/AudioVisualizer';
 
 function App() {
   const [text, setText] = useState('');
   const [speaker, setSpeaker] = useState(null);
   const [voices, setVoices] = useState([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const audioRef = useRef(null); // NEW
 
   useEffect(() => {
     const handleVoicesChanged = () => {
@@ -89,8 +32,12 @@ function App() {
     const sentences = text.split(/(?<=[.!?])\s+/);
     let currentSpeaker = 0;
 
-    const maleVoice = voices.find(v => v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('male'));
-    const femaleVoice = voices.find(v => v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('female'));
+    const maleVoice = voices.find(v =>
+      v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('male')
+    );
+    const femaleVoice = voices.find(v =>
+      v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('female')
+    );
 
     const speak = (index) => {
       if (index >= sentences.length) {
@@ -108,25 +55,20 @@ function App() {
       }
 
       setSpeaker(currentSpeaker);
-      setIsSpeaking(true);
+      currentSpeaker = (currentSpeaker + 1) % 2;
 
+      utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => {
         setIsSpeaking(false);
         speak(index + 1);
       };
 
-      utterance.onstart = () => {
-        setIsSpeaking(true);
-      };
-
       speechSynthesis.speak(utterance);
-      currentSpeaker = (currentSpeaker + 1) % 2;
     };
 
     speak(0);
   };
 
-  // ✅ Read text file and load it into the text box
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -152,7 +94,16 @@ function App() {
 
       <InputSection text={text} setText={setText} onSubmit={handleSubmit} />
       <SpeakerDisplay speaker={speaker} />
-      <AudioWave isSpeaking={isSpeaking} />
+
+      {/* Static audio for now (replace with your file) */}
+      <audio
+        ref={audioRef}
+        controls
+        src="/sample.mp3" // Replace with your file path
+        className="mt-4"
+      />
+
+      <AudioVisualizer audioRef={audioRef} />
     </div>
   );
 }
@@ -168,54 +119,68 @@ export default App;
 
 
 
+import React, { useEffect, useRef } from 'react';
 
-(currentSpeaker);
-      currentSpeaker = (currentSpeaker + 1) % 2;
+const AudioVisualizer = ({ audioRef }) => {
+  const canvasRef = useRef(null);
 
-      utterance.onend = () => speak(index + 1);
-      speechSynthesis.speak(utterance);
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+
+    const source = audioCtx.createMediaElementSource(audioRef.current);
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const canvas = canvasRef.current;
+    const canvasCtx = canvas.getContext('2d');
+
+    const draw = () => {
+      requestAnimationFrame(draw);
+
+      analyser.getByteFrequencyData(dataArray);
+
+      canvasCtx.fillStyle = '#111827'; // Tailwind slate-900
+      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i] / 2;
+
+        canvasCtx.fillStyle = '#4ade80'; // Tailwind green-400
+        canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+
+        x += barWidth + 1;
+      }
     };
 
-    speak(0);
-  };
+    draw();
+
+    // Resume context on play (required in some browsers)
+    const resume = () => audioCtx.resume();
+    audioRef.current.addEventListener('play', resume);
+
+    return () => {
+      audioRef.current.removeEventListener('play', resume);
+      audioCtx.close();
+    };
+  }, [audioRef]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-6">
-      <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center">
-        🎙️ Text to Podcast Generator
-      </h1>
-
-      <InputSection text={text} setText={setText} onSubmit={handleSubmit} />
-      <SpeakerDisplay speaker={speaker} />
-    </div>
+    <canvas
+      ref={canvasRef}
+      width={600}
+      height={100}
+      className="mt-4 border border-green-500 rounded"
+    />
   );
-}
+};
 
-export default App;
-
-
-
-haa
-
-
-
-
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import './index.css';
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-
-
-
-
-if (currentSpeaker === 0 && maleVoice) {
-        utterance.voice = maleVoice;
-      } else if (currentSpeaker === 1 && femaleVoice) {
-        utterance.voice = femaleVoice;
-      }
+export default AudioVisualizer;
