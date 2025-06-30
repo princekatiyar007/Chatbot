@@ -118,3 +118,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 );
 
 
+
+
+if (currentSpeaker === 0 && maleVoice) {
+        utterance.voice = maleVoice;
+      } else if (currentSpeaker === 1 && femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
