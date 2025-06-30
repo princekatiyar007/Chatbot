@@ -1,3 +1,81 @@
+import React, { useEffect, useRef } from 'react';
+
+const AudioVisualizer = ({ audioRef }) => {
+  const canvasRef = useRef(null);
+  const isInitialized = useRef(false); // ✅ Track init
+
+  useEffect(() => {
+    if (!audioRef.current || isInitialized.current) return;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+
+    try {
+      const source = audioCtx.createMediaElementSource(audioRef.current);
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    } catch (e) {
+      console.error('Audio source already connected:', e);
+      return;
+    }
+
+    isInitialized.current = true; // ✅ Mark as initialized
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const canvas = canvasRef.current;
+    const canvasCtx = canvas.getContext('2d');
+
+    const draw = () => {
+      requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+
+      canvasCtx.fillStyle = '#111827';
+      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i] / 2;
+        canvasCtx.fillStyle = '#4ade80';
+        canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        x += barWidth + 1;
+      }
+    };
+
+    draw();
+
+    const resume = () => audioCtx.resume();
+    audioRef.current.addEventListener('play', resume);
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('play', resume);
+      }
+      audioCtx.close();
+    };
+  }, [audioRef]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={600}
+      height={100}
+      className="mt-4 border border-green-500 rounded"
+    />
+  );
+};
+
+export default AudioVisualizer;
+
+
+
+
+
+
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
