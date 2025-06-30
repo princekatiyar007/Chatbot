@@ -1,66 +1,28 @@
-import React from 'react';
-
-const InputSection = ({ text, setText, onSubmit }) => {
-  return (
-    <div className="w-full max-w-2xl">
-      <textarea
-        rows="5"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Enter your podcast script..."
-        className="w-full p-4 text-black rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      <button
-        onClick={onSubmit}
-        className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold"
-      >
-        Generate Podcast
-      </button>
-    </div>
-  );
-};
-
-export default InputSection;
-
-
-
-
-
-
-import React from 'react';
-
-const SpeakerDisplay = ({ speaker }) => {
-  return (
-    <div className="flex justify-center items-center space-x-20 mt-10">
-      <div className={`flex flex-col items-center transition-all duration-300 ${speaker === 0 ? 'scale-110 text-green-400' : 'opacity-50'}`}>
-        <span className="text-6xl">🧑‍💼</span>
-        <span>Speaker 1</span>
-      </div>
-      <div className={`flex flex-col items-center transition-all duration-300 ${speaker === 1 ? 'scale-110 text-green-400' : 'opacity-50'}`}>
-        <span className="text-6xl">👩‍💼</span>
-        <span>Speaker 2</span>
-      </div>
-    </div>
-  );
-};
-
-export default SpeakerDisplay;
-
-
-
-
-
-
-
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './index.css';
 import InputSection from './components/InputSection';
 import SpeakerDisplay from './components/SpeakerDisplay';
+import AudioWave from './components/AudioWave';
 
 function App() {
   const [text, setText] = useState('');
   const [speaker, setSpeaker] = useState(null);
+  const [voices, setVoices] = useState([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    const handleVoicesChanged = () => {
+      const availableVoices = speechSynthesis.getVoices();
+      setVoices(availableVoices);
+    };
+
+    speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+    handleVoicesChanged();
+
+    return () => {
+      speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+    };
+  }, []);
 
   const handleSubmit = () => {
     if (!text.trim()) return;
@@ -68,14 +30,87 @@ function App() {
     const sentences = text.split(/(?<=[.!?])\s+/);
     let currentSpeaker = 0;
 
+    const maleVoice = voices.find(v => v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('male'));
+    const femaleVoice = voices.find(v => v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('female'));
+
     const speak = (index) => {
       if (index >= sentences.length) {
         setSpeaker(null);
+        setIsSpeaking(false);
         return;
       }
 
       const utterance = new SpeechSynthesisUtterance(sentences[index]);
+
+      if (currentSpeaker === 0 && maleVoice) {
+        utterance.voice = maleVoice;
+      } else if (currentSpeaker === 1 && femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+
       setSpeaker(currentSpeaker);
+      setIsSpeaking(true);
+
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        speak(index + 1);
+      };
+
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+      };
+
+      speechSynthesis.speak(utterance);
+      currentSpeaker = (currentSpeaker + 1) % 2;
+    };
+
+    speak(0);
+  };
+
+  // ✅ Read text file and load it into the text box
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setText(e.target.result);
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-6">
+      <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center">
+        🎙️ Text to Podcast Generator
+      </h1>
+
+      <input
+        type="file"
+        accept=".txt"
+        onChange={handleFileUpload}
+        className="mb-4 text-white"
+      />
+
+      <InputSection text={text} setText={setText} onSubmit={handleSubmit} />
+      <SpeakerDisplay speaker={speaker} />
+      <AudioWave isSpeaking={isSpeaking} />
+    </div>
+  );
+}
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+
+(currentSpeaker);
       currentSpeaker = (currentSpeaker + 1) % 2;
 
       utterance.onend = () => speak(index + 1);
