@@ -1,3 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Input Page</title>
+</head>
+<body>
+  <h2>Enter Query</h2>
+  <input type="text" id="queryInput" placeholder="Type something..." />
+  <button onclick="submitQuery()">Submit</button>
+
+  <script src="js/index.js"></script>
+</body>
+</html>
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Result Page</title>
+</head>
+<body>
+  <h2>Processed Output</h2>
+  <p id="displayQuery"></p>
+
+  <script src="js/index.js"></script>
+</body>
+</html>
+
+
+
+
+// Detect current page
+const path = window.location.pathname;
+
+// Page 1: index.html – just redirect with raw input
+if (path.endsWith("index.html")) {
+  window.submitQuery = function () {
+    const rawQuery = document.getElementById("queryInput").value.trim();
+    if (rawQuery) {
+      // Pass raw input to result page (not processed yet)
+      const encoded = encodeURIComponent(rawQuery);
+      window.location.href = `result.html?q=${encoded}`;
+    }
+  };
+}
+
+// Page 2: result.html – receive raw input and process it
+if (path.endsWith("result.html")) {
+  const params = new URLSearchParams(window.location.search);
+  const rawQuery = params.get("q");
+
+  const displayEl = document.getElementById("displayQuery");
+  if (rawQuery) {
+    const processed = processQuery(rawQuery); // Process here
+    displayEl.innerText = `Processed: ${processed}`;
+  } else {
+    displayEl.innerText = "No query provided.";
+  }
+}
+
+// Example processing function
+function processQuery(input) {
+  // Transform raw input (e.g., lowercase → uppercase)
+  return input.toUpperCase();
+}
+
+
+
+
+
+
+
+
+
+
+
 import React, { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 
