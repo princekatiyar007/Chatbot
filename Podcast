@@ -1,3 +1,69 @@
+import React, { useEffect, useRef, useState } from 'react';
+import WaveSurfer from 'wavesurfer.js';
+
+const Waveform = ({ audioUrl }) => {
+  const waveformRef = useRef(null);
+  const wavesurferRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (!waveformRef.current) return;
+
+    // Cleanup old instance if re-rendered
+    if (wavesurferRef.current) {
+      wavesurferRef.current.destroy();
+    }
+
+    // Initialize WaveSurfer
+    wavesurferRef.current = WaveSurfer.create({
+      container: waveformRef.current,
+      waveColor: '#94a3b8',
+      progressColor: '#4ade80',
+      cursorColor: '#22c55e',
+      height: 100,
+      responsive: true,
+      barWidth: 2,
+    });
+
+    wavesurferRef.current.load(audioUrl);
+
+    return () => {
+      wavesurferRef.current.destroy();
+    };
+  }, [audioUrl]);
+
+  const togglePlay = () => {
+    if (wavesurferRef.current) {
+      wavesurferRef.current.playPause();
+      setIsPlaying(wavesurferRef.current.isPlaying());
+    }
+  };
+
+  return (
+    <div className="w-full max-w-2xl mx-auto mt-6">
+      <div ref={waveformRef} className="rounded border border-green-500" />
+      <button
+        onClick={togglePlay}
+        className="mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded"
+      >
+        {isPlaying ? 'Pause' : 'Play'}
+      </button>
+    </div>
+  );
+};
+
+export default Waveform;
+
+
+
+
+
+
+
+
+
+
+
 import React, { useEffect, useRef } from 'react';
 
 const AudioVisualizer = ({ audioRef }) => {
