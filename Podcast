@@ -1,3 +1,87 @@
+import React from "react";
+import "./index.css"; // optional, use for Tailwind/custom styles
+import HomePage from "./HomePage";
+
+function App() {
+  return <HomePage />;
+}
+
+export default App;
+
+
+
+
+
+
+import React, { useState } from "react";
+
+function HomePage() {
+  const [topic, setTopic] = useState("");
+  const [response, setResponse] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("https://your-api.com/endpoint", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ topic: topic }),
+      });
+
+      const data = await res.json();
+      setResponse(data.result); // Change this based on actual API response
+    } catch (err) {
+      console.error("Error:", err);
+      setResponse("Something went wrong.");
+    }
+  };
+
+  return (
+    <div className="p-8 max-w-xl mx-auto">
+      <form onSubmit={handleSubmit}>
+        <textarea
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          placeholder="Enter topic here"
+          className="w-full h-32 p-2 border border-gray-400 rounded mb-4"
+        />
+        <button
+          type="submit"
+          className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+        >
+          Submit
+        </button>
+      </form>
+
+      {response && (
+        <div className="mt-6 p-4 border border-gray-300 rounded bg-gray-50">
+          <h3 className="font-bold">Response:</h3>
+          <p>{response}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default HomePage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
