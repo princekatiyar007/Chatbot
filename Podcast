@@ -1,3 +1,97 @@
+
+import React, { useState } from "react";
+
+function AudioGenerator() {
+  const [topic, setTopic] = useState("");
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setAudioUrl(null);
+
+    try {
+      // 1️⃣ First API: Get Script
+      const res1 = await fetch("https://api1.example.com", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic }),
+      });
+      const data1 = await res1.json();
+      const script = data1.result; // adjust to actual key
+
+      // 2️⃣ Second API: Get Audio
+      const res2 = await fetch("https://api2.example.com", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script }),
+      });
+
+      if (!res2.ok) throw new Error("Audio generation failed");
+
+      const audioBlob = await res2.blob();
+      const audioObjectUrl = URL.createObjectURL(audioBlob);
+      setAudioUrl(audioObjectUrl);
+    } catch (err) {
+      setError("Something went wrong: " + err.message);
+      console.error(err);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center p-4">
+      <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-2xl">
+        <h1 className="text-3xl font-bold mb-6 text-center">🎤 Script to Audio Generator</h1>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <textarea
+            className="w-full p-4 h-32 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-white placeholder-gray-400"
+            placeholder="Enter your topic here..."
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+          />
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 transition duration-200 text-white font-bold py-3 rounded-lg"
+            disabled={loading}
+          >
+            {loading ? "Generating Audio..." : "Submit"}
+          </button>
+        </form>
+
+        {error && (
+          <div className="mt-4 text-red-400 text-center font-medium">{error}</div>
+        )}
+
+        {audioUrl && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-2 text-center">🔊 Your Audio Output</h2>
+            <audio
+              className="w-full mt-2 rounded-lg"
+              controls
+              src={audioUrl}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default AudioGenerator;
+
+
+
+
+
+
+
 module.exports = {
   plugins: {
     tailwindcss: {},
