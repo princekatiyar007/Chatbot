@@ -1,3 +1,87 @@
+
+import React, { useState } from "react";
+
+function AudioGenerator() {
+  const [topic, setTopic] = useState("");
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setAudioUrl(null);
+
+    try {
+      // 🔹 Step 1: Send topic to API 1
+      const res1 = await fetch("https://api1.example.com", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ topic }),
+      });
+
+      const data1 = await res1.json();
+      const script = data1.result; // Adjust based on API 1's response format
+
+      // 🔹 Step 2: Send script to API 2 and get audio stream
+      const res2 = await fetch("https://api2.example.com", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ script }),
+      });
+
+      if (!res2.ok) {
+        throw new Error("Failed to get audio");
+      }
+
+      const audioBlob = await res2.blob(); // Convert audio stream to blob
+      const audioObjectUrl = URL.createObjectURL(audioBlob); // Convert blob to playable URL
+      setAudioUrl(audioObjectUrl); // Set URL for audio player
+
+    } catch (error) {
+      console.error("Error generating audio:", error);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="p-8 max-w-xl mx-auto">
+      <form onSubmit={handleSubmit}>
+        <textarea
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          placeholder="Enter topic"
+          className="w-full h-32 p-2 border border-gray-400 rounded mb-4"
+        />
+        <button
+          type="submit"
+          className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+        >
+          Generate Audio
+        </button>
+      </form>
+
+      {loading && <p className="mt-4">Generating audio...</p>}
+
+      {audioUrl && (
+        <div className="mt-6">
+          <audio controls src={audioUrl} className="w-full" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default AudioGenerator;
+
+
+
+
+
 import React from "react";
 import "./index.css"; // optional, use for Tailwind/custom styles
 import HomePage from "./HomePage";
