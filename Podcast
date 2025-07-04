@@ -1,3 +1,83 @@
+<div id="content" class="space-y-6"></div>
+
+<script>
+  const content = [
+    { type: "text", value: "This is a paragraph" },
+    { type: "image", value: "https://via.placeholder.com/300" },
+    { type: "text", value: "Another paragraph" },
+    { type: "image", value: "https://via.placeholder.com/400" }
+  ];
+
+  const container = document.getElementById("content");
+
+  function addFullscreenButtonToImage(img) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "relative inline-block w-fit";
+
+    img.classList.add(
+      "rounded-xl",
+      "shadow-lg",
+      "transition",
+      "hover:scale-105",
+      "duration-300",
+      "cursor-pointer"
+    );
+
+    img.setAttribute("loading", "lazy");
+
+    wrapper.appendChild(img);
+
+    const button = document.createElement("button");
+    button.innerHTML = "🔍";
+    button.title = "Toggle Fullscreen";
+    button.className =
+      "absolute top-2 right-2 bg-black bg-opacity-50 p-2 rounded-full text-white hover:bg-opacity-75 z-10";
+
+    let isFullscreen = false;
+
+    button.onclick = () => {
+      if (!isFullscreen) {
+        if (img.requestFullscreen) img.requestFullscreen();
+        else if (img.webkitRequestFullscreen) img.webkitRequestFullscreen();
+        else if (img.msRequestFullscreen) img.msRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+      }
+    };
+
+    document.addEventListener("fullscreenchange", () => {
+      isFullscreen = !!document.fullscreenElement;
+      button.innerHTML = isFullscreen ? "❌" : "🔍";
+    });
+
+    wrapper.appendChild(button);
+    container.appendChild(wrapper);
+  }
+
+  content.forEach(item => {
+    if (item.type === "text") {
+      const p = document.createElement("p");
+      p.textContent = item.value;
+      p.className = "text-gray-800 text-base";
+      container.appendChild(p);
+    } else if (item.type === "image") {
+      const img = document.createElement("img");
+      img.src = item.value;
+      img.alt = "dynamic image";
+      img.className = "max-w-full";
+      addFullscreenButtonToImage(img);
+    }
+  });
+</script>
+
+
+
+
+
+
+
 
 <script>
   // Function to add a fullscreen button to an image
