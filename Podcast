@@ -1,4 +1,50 @@
 
+<script>
+  // Function to add a fullscreen button to an image
+  function addFullscreenButton(imageId) {
+    const image = document.getElementById(imageId);
+    const container = image.parentElement;
+
+    // Create button
+    const button = document.createElement("button");
+    button.innerHTML = "🔍"; // Or replace with SVG icon
+    button.title = "View Fullscreen";
+
+    // Style the button with Tailwind classes
+    button.className =
+      "absolute top-2 right-2 bg-black bg-opacity-50 p-2 rounded-full text-white hover:bg-opacity-75";
+
+    // Add click event
+    button.onclick = () => {
+      if (image.requestFullscreen) {
+        image.requestFullscreen();
+      } else if (image.webkitRequestFullscreen) {
+        image.webkitRequestFullscreen(); // Safari
+      } else if (image.msRequestFullscreen) {
+        image.msRequestFullscreen(); // IE
+      }
+    };
+
+    // Ensure container has relative positioning
+    if (!container.classList.contains("relative")) {
+      container.classList.add("relative");
+    }
+
+    // Append the button
+    container.appendChild(button);
+  }
+
+  // Call the function after DOM is loaded
+  addFullscreenButton("myImage");
+</script>
+
+
+
+
+
+
+
+
 import React, { useState } from "react";
 
 function AudioGenerator() {
