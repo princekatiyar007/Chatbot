@@ -1,3 +1,109 @@
+import React, { useRef, useState } from 'react';
+
+const StreamAudioPlayer = () => {
+  const audioRef = useRef(null);
+
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setIsPlaying(false);
+
+    try {
+      // Step 1: Call the first API with the user input
+      const api1Response = await fetch('http://localhost:5000/process-input', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!api1Response.ok) throw new Error('Failed to process input');
+
+      const api1Data = await api1Response.json();
+      const transcriptOrPrompt = api1Data.processedText; // Adjust this based on actual API response key
+
+      // Step 2: Call the second API to stream audio from processed text
+      const mediaSource = new MediaSource();
+      const audioEl = audioRef.current;
+      audioEl.src = URL.createObjectURL(mediaSource);
+
+      mediaSource.addEventListener('sourceopen', async () => {
+        const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg'); // or 'audio/wav'
+
+        const api2Response = await fetch('http://localhost:5000/audio-stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: transcriptOrPrompt }),
+        });
+
+        if (!api2Response.body) throw new Error('No audio stream available');
+
+        const reader = api2Response.body.getReader();
+
+        const pump = async () => {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            mediaSource.endOfStream();
+            setLoading(false);
+            setIsPlaying(true);
+            return;
+          }
+
+          sourceBuffer.appendBuffer(value);
+          sourceBuffer.addEventListener('updateend', pump, { once: true });
+        };
+
+        pump();
+      });
+    } catch (err) {
+      console.error('Error during audio generation:', err);
+      setError('Something went wrong while generating audio.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto p-4">
+      <h2 className="text-xl font-bold mb-4 text-center">🔁 Chained Audio Generator</h2>
+
+      <form onSubmit={submitHandler} className="mb-4">
+        <input
+          type="text"
+          className="border border-gray-400 rounded px-3 py-2 w-full mb-2"
+          placeholder="Enter query..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          required
+        />
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 transition"
+        >
+          Generate Audio
+        </button>
+      </form>
+
+      {loading && <p className="text-blue-500 text-center">⏳ Generating & streaming audio...</p>}
+      {error && <p className="text-red-500 text-center">{error}</p>}
+      {isPlaying && <p className="text-green-500 text-center">🎶 Audio is playing now</p>}
+
+      <audio ref={audioRef} controls className="mt-4 w-full" />
+    </div>
+  );
+};
+
+export default StreamAudioPlayer;
+
+
+
+
+
 
 import React, { useEffect, useRef } from 'react';
 
