@@ -1,3 +1,61 @@
+
+import React, { useEffect, useRef } from 'react';
+
+const StreamAudioPlayer = () => {
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const mediaSource = new MediaSource();
+    const audioEl = audioRef.current;
+
+    audioEl.src = URL.createObjectURL(mediaSource);
+
+    mediaSource.addEventListener("sourceopen", async () => {
+      const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg'); // or 'audio/wav' based on backend
+
+      try {
+        const response = await fetch('http://localhost:5000/audio-stream'); // your stream endpoint
+        const reader = response.body.getReader();
+
+        const pump = async () => {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            mediaSource.endOfStream();
+            return;
+          }
+
+          // Append chunk to buffer
+          sourceBuffer.appendBuffer(value);
+          sourceBuffer.addEventListener("updateend", pump, { once: true });
+        };
+
+        pump();
+      } catch (err) {
+        console.error("Streaming error:", err);
+      }
+    });
+  }, []);
+
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-2">Streaming Audio Player</h2>
+      <audio ref={audioRef} controls autoPlay />
+    </div>
+  );
+};
+
+export default StreamAudioPlayer;
+
+
+
+
+
+
+
+
+
+
 Certainly! Here's a **greatly detailed and humanized weekly report** of your Samsung Delhi internship, with **expanded bullet points** for clarity and depth, crafted to reflect your personal learning journey in a professional tone.
 
 ---
